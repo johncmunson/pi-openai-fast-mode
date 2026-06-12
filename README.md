@@ -2,6 +2,8 @@
 
 Pi package that adds a Fast Mode toggle for GPT-5.5 and GPT-5.4.
 
+![Preview Image](./preview-img.png)
+
 ## Features
 
 - Registers `/fast [on|off|toggle]`.
