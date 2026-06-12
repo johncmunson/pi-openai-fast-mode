@@ -2,6 +2,7 @@
   "name": "pi-openai-fast-mode",
   "version": "0.1.0",
   "description": "Pi extension package for toggling OpenAI Fast Mode priority inference",
+  "license": "MIT",
   "type": "module",
   "keywords": [
     "pi-package",
