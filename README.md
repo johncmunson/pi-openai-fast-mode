@@ -2,8 +2,6 @@
 
 Pi package that adds a Fast Mode toggle for GPT-5.5 and GPT-5.4.
 
-![Preview Image](./preview-img.png)
-
 <img style="width: 100%; height: auto;" alt="fast mode" src="https://raw.githubusercontent.com/johncmunson/pi-openai-fast-mode/refs/heads/main/preview-img.png" />
 
 ## Features
