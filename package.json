@@ -10,10 +10,13 @@
     "openai",
     "fast-mode"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johncmunson/pi-openai-fast-mode"
+  },
   "files": [
     "src",
-    "README.md",
-    "PRD.md"
+    "README.md"
   ],
   "pi": {
     "extensions": [
