@@ -8,7 +8,9 @@ export type FastIndicatorComponent = {
   invalidate(): void;
 };
 
-export type FastIndicatorFactory = (...args: unknown[]) => FastIndicatorComponent;
+export type FastIndicatorFactory = (
+  ...args: unknown[]
+) => FastIndicatorComponent;
 
 export type StatusContext = {
   hasUI?: boolean;
@@ -34,7 +36,9 @@ export function getStatusText(
   config: FastModeConfig,
   model: ModelRef | undefined,
 ): StatusText {
-  return config.enabled && findMatchingTarget(model, config.targets) ? "fast" : undefined;
+  return config.enabled && findMatchingTarget(model, config.targets)
+    ? "fast"
+    : undefined;
 }
 
 export function getRightAlignedStatusLine(text: string, width: number): string {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { FAST_COMMAND_USAGE, FastCommandUsageError, getFastCommandCompletions, parseFastCommand } from "../src/commands";
+import {
+  FAST_COMMAND_USAGE,
+  FastCommandUsageError,
+  getFastCommandCompletions,
+  parseFastCommand,
+} from "../src/commands";
 
 describe("parseFastCommand", () => {
   it("toggles for empty args", () => {
@@ -23,7 +28,9 @@ describe("parseFastCommand", () => {
   });
 
   it("throws concise usage guidance for invalid args", () => {
-    expect(() => parseFastCommand("status", false)).toThrow(FastCommandUsageError);
+    expect(() => parseFastCommand("status", false)).toThrow(
+      FastCommandUsageError,
+    );
     expect(() => parseFastCommand("status", false)).toThrow(FAST_COMMAND_USAGE);
     expect(() => parseFastCommand("on now", false)).toThrow(FAST_COMMAND_USAGE);
   });

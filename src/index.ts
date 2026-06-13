@@ -21,13 +21,18 @@ export type FastModeExtensionOptions = {
 
 const DEFAULT_EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 
-function notifyError(ctx: Pick<ExtensionContext, "hasUI" | "ui">, error: unknown): void {
+function notifyError(
+  ctx: Pick<ExtensionContext, "hasUI" | "ui">,
+  error: unknown,
+): void {
   if (!ctx.hasUI) return;
   const message = error instanceof Error ? error.message : String(error);
   ctx.ui.notify(message, "error");
 }
 
-export function createPiFastModeExtension(options: FastModeExtensionOptions = {}): ExtensionFactory {
+export function createPiFastModeExtension(
+  options: FastModeExtensionOptions = {},
+): ExtensionFactory {
   const extensionDir = options.extensionDir ?? DEFAULT_EXTENSION_DIR;
   const agentDir = options.agentDir;
 
@@ -37,7 +42,9 @@ export function createPiFastModeExtension(options: FastModeExtensionOptions = {}
     let loadedCwd: string | undefined;
     let currentModel: ModelRef | undefined;
 
-    async function loadForContext(ctx: Pick<ExtensionContext, "cwd">): Promise<void> {
+    async function loadForContext(
+      ctx: Pick<ExtensionContext, "cwd">,
+    ): Promise<void> {
       const loaded = await loadConfigForScope({
         cwd: ctx.cwd,
         extensionDir,
@@ -49,13 +56,17 @@ export function createPiFastModeExtension(options: FastModeExtensionOptions = {}
       loadedCwd = ctx.cwd;
     }
 
-    async function ensureLoaded(ctx: Pick<ExtensionContext, "cwd">): Promise<void> {
+    async function ensureLoaded(
+      ctx: Pick<ExtensionContext, "cwd">,
+    ): Promise<void> {
       if (!configPath || loadedCwd !== ctx.cwd) {
         await loadForContext(ctx);
       }
     }
 
-    async function saveCurrent(ctx: Pick<ExtensionContext, "cwd">): Promise<void> {
+    async function saveCurrent(
+      ctx: Pick<ExtensionContext, "cwd">,
+    ): Promise<void> {
       if (!configPath || loadedCwd !== ctx.cwd) {
         await loadForContext(ctx);
       }
@@ -80,7 +91,10 @@ export function createPiFastModeExtension(options: FastModeExtensionOptions = {}
     pi.registerCommand("fast", {
       description: "Toggle Fast Mode. Usage: /fast [on|off|toggle]",
       getArgumentCompletions: getFastCommandCompletions,
-      handler: async (args: string, ctx: ExtensionCommandContext): Promise<void> => {
+      handler: async (
+        args: string,
+        ctx: ExtensionCommandContext,
+      ): Promise<void> => {
         try {
           await ensureLoaded(ctx);
           refreshCurrentModel(ctx);

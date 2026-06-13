@@ -1,4 +1,10 @@
-import { DEFAULT_SERVICE_TIER, SUPPORTED_PROVIDERS, type FastModeConfig, type FastTarget, type ModelRef } from "./types";
+import {
+  DEFAULT_SERVICE_TIER,
+  SUPPORTED_PROVIDERS,
+  type FastModeConfig,
+  type FastTarget,
+  type ModelRef,
+} from "./types";
 
 const SUPPORTED_PROVIDER_SET = new Set<string>(SUPPORTED_PROVIDERS);
 
@@ -34,7 +40,10 @@ export function findMatchingTarget(
   );
 }
 
-export function applyFastModePayload(payload: unknown, serviceTier: string): unknown | undefined {
+export function applyFastModePayload(
+  payload: unknown,
+  serviceTier: string,
+): unknown | undefined {
   if (!isRecord(payload)) return undefined;
 
   return {
@@ -53,5 +62,8 @@ export function getFastModePayload(
   const target = findMatchingTarget(model, config.targets);
   if (!target) return undefined;
 
-  return applyFastModePayload(payload, target.serviceTier ?? DEFAULT_SERVICE_TIER);
+  return applyFastModePayload(
+    payload,
+    target.serviceTier ?? DEFAULT_SERVICE_TIER,
+  );
 }

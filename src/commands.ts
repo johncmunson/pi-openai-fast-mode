@@ -7,7 +7,10 @@ export class FastCommandUsageError extends Error {
   }
 }
 
-export function parseFastCommand(args: string, currentEnabled: boolean): boolean {
+export function parseFastCommand(
+  args: string,
+  currentEnabled: boolean,
+): boolean {
   const normalized = args.trim().toLowerCase();
 
   if (normalized === "" || normalized === "toggle") {
@@ -20,7 +23,9 @@ export function parseFastCommand(args: string, currentEnabled: boolean): boolean
   throw new FastCommandUsageError();
 }
 
-export function getFastCommandCompletions(argumentPrefix: string): { value: string; label: string }[] {
+export function getFastCommandCompletions(
+  argumentPrefix: string,
+): { value: string; label: string }[] {
   const prefix = argumentPrefix.trim().toLowerCase();
   return ["on", "off", "toggle"]
     .filter((option) => option.startsWith(prefix))
