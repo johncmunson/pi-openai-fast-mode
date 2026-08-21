@@ -251,6 +251,10 @@ describe("piFastModeExtension runtime behavior", () => {
       enabled: true,
     });
     expectFastIndicatorShown(ctx);
+    expect(ctx.ui.notify).toHaveBeenLastCalledWith(
+      "Fast Mode enabled.",
+      "info",
+    );
 
     await commands.get("fast")!.handler("toggle", ctx);
     expect(
@@ -259,6 +263,10 @@ describe("piFastModeExtension runtime behavior", () => {
       enabled: false,
     });
     expectFastIndicatorHidden(ctx);
+    expect(ctx.ui.notify).toHaveBeenLastCalledWith(
+      "Fast Mode disabled.",
+      "info",
+    );
 
     await commands.get("fast")!.handler("on", ctx);
     expect(
@@ -267,6 +275,10 @@ describe("piFastModeExtension runtime behavior", () => {
       enabled: true,
     });
     expectFastIndicatorShown(ctx);
+    expect(ctx.ui.notify).toHaveBeenLastCalledWith(
+      "Fast Mode enabled.",
+      "info",
+    );
   });
 
   it("/fast off persists disabled state and hides status", async () => {
@@ -292,6 +304,10 @@ describe("piFastModeExtension runtime behavior", () => {
     await commands.get("fast")!.handler("off", ctx);
 
     expectFastIndicatorHidden(ctx);
+    expect(ctx.ui.notify).toHaveBeenLastCalledWith(
+      "Fast Mode disabled.",
+      "info",
+    );
     expect(
       JSON.parse(await readFile(getUserConfigPath(agentDir), "utf8")),
     ).toMatchObject({
