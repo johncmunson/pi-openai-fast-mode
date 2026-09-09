@@ -35,6 +35,14 @@ function notifyError(
   ctx.ui.notify(message, "error");
 }
 
+function notifySuccess(
+  ctx: Pick<ExtensionContext, "hasUI" | "ui">,
+  enabled: boolean,
+): void {
+  if (!ctx.hasUI) return;
+  ctx.ui.notify(`Fast Mode ${enabled ? "enabled" : "disabled"}.`, "info");
+}
+
 export function createPiFastModeExtension(
   options: FastModeExtensionOptions = {},
 ): ExtensionFactory {
@@ -110,6 +118,7 @@ export function createPiFastModeExtension(
           config.enabled = parseFastCommand(args, config.enabled);
           await saveCurrent(ctx);
           updateFastStatus(ctx, config, currentModel);
+          notifySuccess(ctx, config.enabled);
         } catch (error) {
           notifyError(ctx, error);
         }

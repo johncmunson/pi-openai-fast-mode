@@ -9,7 +9,7 @@ Pi package that adds a Fast Mode toggle for GPT-6-Astra, GPT-5.6, GPT-5.5, and G
 - Registers `/fast [on|off|toggle]`.
 - Registers `--fast` to enable Fast Mode at startup.
 - Injects `service_tier: "priority"` into matching OpenAI/OpenAI-Codex provider payloads.
-- Shows a compact right-aligned TUI `fast` indicator only when enabled and the current model is configured.
+- Confirms `/fast` changes with a notification and shows a compact right-aligned TUI `fast` indicator when active.
 - Persists state in user or project scope depending on how the package is loaded.
 
 > View on the [Pi Package Registry](https://pi.dev/packages/pi-openai-fast-mode)
