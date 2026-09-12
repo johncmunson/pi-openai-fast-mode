@@ -12,6 +12,14 @@ Pi package that adds a Fast Mode toggle for GPT-6-Astra, GPT-5.6, GPT-5.5, and G
 - Shows a compact right-aligned TUI `fast` indicator only when enabled and the current model is configured.
 - Persists state in user or project scope depending on how the package is loaded.
 
+### `pi-codex-multi` compatibility
+
+When `pi-codex-multi` rotates accounts, it registers additional accounts as
+`openai-codex-2`, `openai-codex-3`, and so on. Fast Mode treats the base
+`openai-codex` provider and strictly numbered aliases as one provider family,
+so the canonical `openai-codex` targets below apply to every rotated account.
+Model matching remains exact, and no per-account target entries are needed.
+
 > View on the [Pi Package Registry](https://pi.dev/packages/pi-openai-fast-mode)
 
 ## Install

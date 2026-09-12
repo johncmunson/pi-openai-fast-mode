@@ -104,6 +104,8 @@ describe("normalizeTargets", () => {
           model: " gpt-5.5 ",
           serviceTier: " priority ",
         },
+        { provider: "openai-codex-2", model: "gpt-5.5" },
+        { provider: "openai-codex-foo", model: "gpt-5.5" },
         { provider: "anthropic", model: "claude" },
         { provider: 1, model: "gpt-5.4" },
         { provider: "openai", model: "" },

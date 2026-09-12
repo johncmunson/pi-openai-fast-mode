@@ -73,14 +73,23 @@ describe("model matching", () => {
   });
 });
 
-describe.each(["openai", "openai-codex"])("GPT-6-Astra on %s", (provider) => {
+describe.each([
+  "openai",
+  "openai-codex",
+  "openai-codex-2",
+  "openai-codex-3",
+  "openai-codex-10",
+])("GPT-6-Astra on %s", (provider) => {
   const model = { provider, id: "gpt-6-astra" };
   const defaults = cloneConfig();
   const enabledConfig = { ...defaults, enabled: true };
+  const canonicalProvider = provider.startsWith("openai-codex-")
+    ? "openai-codex"
+    : provider;
 
   it("matches the default target, injects priority, and shows fast when enabled", () => {
     expect(findMatchingTarget(model, defaults.targets)).toEqual({
-      provider,
+      provider: canonicalProvider,
       model: "gpt-6-astra",
       serviceTier: "priority",
     });
@@ -103,6 +112,27 @@ describe.each(["openai", "openai-codex"])("GPT-6-Astra on %s", (provider) => {
     expect(findMatchingTarget(variant, defaults.targets)).toBeUndefined();
     expect(getFastModePayload(enabledConfig, variant, {})).toBeUndefined();
     expect(getStatusText(enabledConfig, variant)).toBeUndefined();
+  });
+});
+
+describe.each([
+  "openai-codex-",
+  "openai-codex-foo",
+  "openai-codex-2foo",
+  "openai-codex--2",
+  "prefix-openai-codex-2",
+  "openai-codex-2-suffix",
+  "openai-codex-1.2",
+  "openai-codex-2\n",
+])("malformed Codex provider %s", (provider) => {
+  const model = { provider, id: "gpt-6-astra" };
+  const defaults = cloneConfig();
+  const enabledConfig = { ...defaults, enabled: true };
+
+  it("does not match, inject, or show the fast indicator", () => {
+    expect(findMatchingTarget(model, defaults.targets)).toBeUndefined();
+    expect(getFastModePayload(enabledConfig, model, { a: 1 })).toBeUndefined();
+    expect(getStatusText(enabledConfig, model)).toBeUndefined();
   });
 });
 

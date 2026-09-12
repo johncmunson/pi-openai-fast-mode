@@ -232,6 +232,53 @@ describe("piFastModeExtension runtime behavior", () => {
     });
   });
 
+  it("applies Fast Mode through the extension hooks for a rotated Codex alias", async () => {
+    const root = await makeTempDir();
+    const cwd = join(root, "project");
+    const agentDir = join(root, "agent");
+    await mkdir(cwd, { recursive: true });
+
+    const { pi, handlers } = createFakePi(true);
+    createPiFastModeExtension({
+      extensionDir: join(root, "global", "pi-openai-fast-mode", "src"),
+      agentDir,
+    })(pi as any);
+
+    const ctx = makeCtx(cwd, {
+      provider: "openai-codex-3",
+      id: "gpt-6-astra",
+    });
+    await runHandler(
+      handlers,
+      "session_start",
+      { type: "session_start", reason: "startup" },
+      ctx,
+    );
+
+    expectFastIndicatorShown(ctx);
+    expect(
+      await runHandler(
+        handlers,
+        "before_provider_request",
+        {
+          type: "before_provider_request",
+          payload: { model: "gpt-6-astra", messages: [] },
+        },
+        ctx,
+      ),
+    ).toEqual({
+      model: "gpt-6-astra",
+      messages: [],
+      service_tier: "priority",
+    });
+
+    const persisted = JSON.parse(
+      await readFile(getUserConfigPath(agentDir), "utf8"),
+    );
+    expect(persisted.enabled).toBe(true);
+    expect(persisted.targets).toEqual(DEFAULT_CONFIG.targets);
+  });
+
   it("/fast, /fast on, and /fast toggle persist expected enabled states", async () => {
     const root = await makeTempDir();
     const cwd = join(root, "project");

@@ -7,6 +7,14 @@ import {
 } from "./types";
 
 const SUPPORTED_PROVIDER_SET = new Set<string>(SUPPORTED_PROVIDERS);
+// Numbered aliases are runtime provider IDs; persisted targets stay canonical.
+const NUMBERED_CODEX_PROVIDER = /^openai-codex-[0-9]+(?![\s\S])/;
+
+function canonicalizeProvider(provider: string): string | undefined {
+  if (SUPPORTED_PROVIDER_SET.has(provider)) return provider;
+  if (NUMBERED_CODEX_PROVIDER.test(provider)) return "openai-codex";
+  return undefined;
+}
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -23,20 +31,23 @@ export function toModelRef(model: unknown): ModelRef | undefined {
 }
 
 export function isSupportedProvider(provider: string): boolean {
-  return SUPPORTED_PROVIDER_SET.has(provider);
+  return canonicalizeProvider(provider) !== undefined;
 }
 
 export function findMatchingTarget(
   model: ModelRef | undefined,
   targets: FastTarget[],
 ): FastTarget | undefined {
-  if (!model || !isSupportedProvider(model.provider)) return undefined;
+  if (!model) return undefined;
+
+  const provider = canonicalizeProvider(model.provider);
+  if (!provider) return undefined;
 
   return targets.find(
     (target) =>
-      target.provider === model.provider &&
+      target.provider === provider &&
       target.model === model.id &&
-      isSupportedProvider(target.provider),
+      SUPPORTED_PROVIDER_SET.has(target.provider),
   );
 }
 
