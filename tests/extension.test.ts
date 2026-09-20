@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtemp } from "node:fs/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createEventBus, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { createPiFastModeExtension } from "../src/index";
 import {
   DEFAULT_CONFIG,
@@ -12,6 +13,7 @@ import {
 import { STATUS_KEY } from "../src/types";
 
 type FakePi = {
+  events: ReturnType<typeof createEventBus>;
   registerFlag: ReturnType<typeof vi.fn>;
   registerCommand: ReturnType<typeof vi.fn>;
   getFlag: ReturnType<typeof vi.fn>;
@@ -46,6 +48,7 @@ function createFakePi(fastFlag = false): {
   const commands = new Map<string, RegisteredCommand>();
 
   const pi: FakePi = {
+    events: createEventBus(),
     registerFlag: vi.fn(),
     registerCommand: vi.fn((name: string, options: RegisteredCommand) => {
       commands.set(name, options);
@@ -140,6 +143,65 @@ describe("piFastModeExtension registration", () => {
 });
 
 describe("piFastModeExtension runtime behavior", () => {
+  it.each([true, false])("publishes live status with hasUI=%s", async (hasUI) => {
+    const root = await makeTempDir();
+    const agentDir = join(root, "agent");
+    const { pi, handlers, commands } = createFakePi(true);
+    const status = vi.fn();
+    pi.events.on("pi-openai-fast-mode:status", status);
+    createPiFastModeExtension({
+      extensionDir: join(root, "global", "pi-openai-fast-mode", "src"),
+      agentDir,
+    })(pi as unknown as ExtensionAPI);
+    const ctx = { ...makeCtx(root, { provider: "openai", id: "gpt-5.4" }), hasUI };
+    const active = {
+      enabled: true, active: true, provider: "openai", model: "gpt-5.4",
+    };
+
+    // No default or stale state while startup has not completed.
+    pi.events.emit("pi-openai-fast-mode:request-status", undefined);
+    await runHandler(handlers, "model_select", { model: ctx.model }, ctx);
+    expect(status).not.toHaveBeenCalled();
+
+    await runHandler(handlers, "session_start", {}, ctx);
+    expect(status).toHaveBeenCalledExactlyOnceWith(active);
+
+    // Another process can change shared config without changing this session.
+    await writeFile(
+      getUserConfigPath(agentDir),
+      JSON.stringify({ ...DEFAULT_CONFIG, enabled: false }),
+    );
+    status.mockClear();
+    pi.events.emit("pi-openai-fast-mode:request-status", undefined);
+    expect(status).toHaveBeenCalledExactlyOnceWith(active);
+
+    await commands.get("fast")!.handler("off", ctx);
+    expect(status).toHaveBeenLastCalledWith({
+      ...active, enabled: false, active: false,
+    });
+    await commands.get("fast")!.handler("on", ctx);
+    expect(status).toHaveBeenLastCalledWith(active);
+
+    const unsupported = { provider: "openai", id: "gpt-4" };
+    await runHandler(handlers, "model_select", { model: unsupported }, ctx);
+    expect(status).toHaveBeenLastCalledWith({
+      ...active, active: false, model: "gpt-4",
+    });
+    await runHandler(handlers, "model_select", { model: ctx.model }, ctx);
+    expect(status).toHaveBeenLastCalledWith(active);
+    await runHandler(handlers, "model_select", {}, { ...ctx, model: undefined });
+    expect(status).toHaveBeenLastCalledWith({
+      enabled: true, active: false, provider: undefined, model: undefined,
+    });
+
+    await runHandler(handlers, "session_shutdown", {}, ctx);
+    status.mockClear();
+    pi.events.emit("pi-openai-fast-mode:request-status", undefined);
+    expect(status).not.toHaveBeenCalled();
+    expect(ctx.ui.notify).not.toHaveBeenCalled();
+    if (!hasUI) expect(ctx.ui.setWidget).not.toHaveBeenCalled();
+  });
+
   it("refreshes persisted fast targets to priority on startup without changing enabled", async () => {
     const root = await makeTempDir();
     const cwd = join(root, "project");
