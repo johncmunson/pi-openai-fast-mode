@@ -43,6 +43,26 @@ Start Pi with Fast Mode enabled and persisted:
 pi --fast
 ```
 
+## Status events
+
+Other extensions can read this session's live state through `pi.events`, without reading shared config files:
+
+```ts
+pi.events.on("pi-openai-fast-mode:status", (status) => {
+  // Consume { enabled, active, provider, model } here.
+});
+
+pi.on("session_start", () => {
+  pi.events.emit("pi-openai-fast-mode:request-status", undefined);
+});
+```
+
+- `enabled`: whether the Fast Mode toggle is on.
+- `active`: whether it is on **and** the current model matches a configured target.
+- `provider` and `model`: current provider and model ID, or `undefined` when no model is selected.
+
+Status is published after startup, successful `/fast` commands, model changes, and status requests, including without a TUI. Requests before initialization or after shutdown receive no response; unavailable status is not the same as disabled. Register the listener during extension setup so it receives the startup event regardless of session-handler order.
+
 ## Default configuration
 
 Fast Mode starts disabled and only applies to exact configured provider/model pairs:

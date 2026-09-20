@@ -14,7 +14,7 @@ import {
   syncSupportedTargets,
 } from "./config";
 import { getFastModePayload, toModelRef } from "./payload";
-import { clearFastStatus, updateFastStatus } from "./status";
+import { clearFastStatus, getStatusText, updateFastStatus } from "./status";
 import type { FastModeConfig, ModelRef } from "./types";
 
 export type FastModeExtensionOptions = {
@@ -46,6 +46,19 @@ export function createPiFastModeExtension(
     let configPath: string | undefined;
     let loadedCwd: string | undefined;
     let currentModel: ModelRef | undefined;
+    let ready = false;
+
+    function publishStatus(): void {
+      if (!ready) return;
+      pi.events.emit("pi-openai-fast-mode:status", {
+        enabled: config.enabled,
+        active: getStatusText(config, currentModel) === "fast",
+        provider: currentModel?.provider,
+        model: currentModel?.id,
+      });
+    }
+
+    pi.events.on("pi-openai-fast-mode:request-status", publishStatus);
 
     async function loadForContext(
       ctx: Pick<ExtensionContext, "cwd">,
@@ -110,6 +123,7 @@ export function createPiFastModeExtension(
           config.enabled = parseFastCommand(args, config.enabled);
           await saveCurrent(ctx);
           updateFastStatus(ctx, config, currentModel);
+          publishStatus();
         } catch (error) {
           notifyError(ctx, error);
         }
@@ -117,6 +131,7 @@ export function createPiFastModeExtension(
     });
 
     pi.on("session_start", async (_event, ctx) => {
+      ready = false;
       try {
         currentModel = toModelRef(ctx.model);
         await loadForContext(ctx);
@@ -126,7 +141,9 @@ export function createPiFastModeExtension(
           await saveCurrent(ctx);
         }
 
+        ready = true;
         updateFastStatus(ctx, config, currentModel);
+        publishStatus();
       } catch (error) {
         notifyError(ctx, error);
       }
@@ -135,6 +152,7 @@ export function createPiFastModeExtension(
     pi.on("model_select", async (event, ctx) => {
       currentModel = toModelRef(event.model) ?? toModelRef(ctx.model);
       updateFastStatus(ctx, config, currentModel);
+      publishStatus();
     });
 
     pi.on("before_provider_request", (event, ctx) => {
@@ -143,6 +161,7 @@ export function createPiFastModeExtension(
     });
 
     pi.on("session_shutdown", async (_event, ctx) => {
+      ready = false;
       try {
         if (configPath) {
           await saveConfigToPath(configPath, config);
