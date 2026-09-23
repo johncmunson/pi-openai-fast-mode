@@ -188,6 +188,44 @@ describe("piFastModeExtension runtime behavior", () => {
     ).toEqual({ model: "gpt-5.4", service_tier: "priority" });
   });
 
+  it("applies Fast Mode to GPT-6 Sol and Luna through the extension hooks", async () => {
+    const root = await makeTempDir();
+    const cwd = join(root, "project");
+    const agentDir = join(root, "agent");
+    await mkdir(cwd, { recursive: true });
+
+    const { pi, handlers } = createFakePi(true);
+    createPiFastModeExtension({
+      extensionDir: join(root, "global", "pi-openai-fast-mode", "src"),
+      agentDir,
+    })(pi as any);
+
+    const ctx = makeCtx(cwd, { provider: "openai-codex", id: "gpt-6-luna" });
+    await runHandler(
+      handlers,
+      "session_start",
+      { type: "session_start", reason: "startup" },
+      ctx,
+    );
+
+    expectFastIndicatorShown(ctx);
+    expect(
+      await runHandler(
+        handlers,
+        "before_provider_request",
+        {
+          type: "before_provider_request",
+          payload: { model: "gpt-6-luna", messages: [] },
+        },
+        ctx,
+      ),
+    ).toEqual({
+      model: "gpt-6-luna",
+      messages: [],
+      service_tier: "priority",
+    });
+  });
+
   it("--fast enables, persists, shows status, and mutates matching payloads", async () => {
     const root = await makeTempDir();
     const cwd = join(root, "project");
@@ -395,8 +433,8 @@ describe("piFastModeExtension runtime behavior", () => {
     await runHandler(
       handlers,
       "model_select",
-      { type: "model_select", model: { provider: "openai", id: "gpt-4" } },
-      { ...ctx, model: { provider: "openai", id: "gpt-4" } },
+      { type: "model_select", model: { provider: "openai", id: "claude" } },
+      { ...ctx, model: { provider: "openai", id: "claude" } },
     );
 
     expect(ctx.ui.setWidget).toHaveBeenCalledWith(

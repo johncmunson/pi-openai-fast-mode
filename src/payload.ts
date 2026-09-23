@@ -26,6 +26,11 @@ export function isSupportedProvider(provider: string): boolean {
   return SUPPORTED_PROVIDER_SET.has(provider);
 }
 
+function matchesModelId(pattern: string, modelId: string): boolean {
+  if (!pattern.endsWith("*")) return pattern === modelId;
+  return modelId.startsWith(pattern.slice(0, -1));
+}
+
 export function findMatchingTarget(
   model: ModelRef | undefined,
   targets: FastTarget[],
@@ -35,7 +40,7 @@ export function findMatchingTarget(
   return targets.find(
     (target) =>
       target.provider === model.provider &&
-      target.model === model.id &&
+      matchesModelId(target.model, model.id) &&
       isSupportedProvider(target.provider),
   );
 }
