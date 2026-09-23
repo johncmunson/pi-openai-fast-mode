@@ -7,6 +7,7 @@ export type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
 
 export type FastTarget = {
   provider: string;
+  /** Exact model ID or a trailing-* model prefix. */
   model: string;
   serviceTier?: string;
 };

@@ -73,36 +73,57 @@ describe("model matching", () => {
   });
 });
 
-describe.each(["openai", "openai-codex"])("GPT-6-Astra on %s", (provider) => {
-  const model = { provider, id: "gpt-6-astra" };
-  const defaults = cloneConfig();
-  const enabledConfig = { ...defaults, enabled: true };
+describe.each(["openai", "openai-codex"])("GPT-6 models on %s", (provider) => {
+  describe.each(["gpt-6-astra", "gpt-6-sol", "gpt-6-luna"])("%s", (id) => {
+    const model = { provider, id };
+    const defaults = cloneConfig();
+    const enabledConfig = { ...defaults, enabled: true };
 
-  it("matches the default target, injects priority, and shows fast when enabled", () => {
+    it("matches the default target, injects priority, and shows fast when enabled", () => {
+      expect(findMatchingTarget(model, defaults.targets)).toEqual({
+        provider,
+        model: id,
+        serviceTier: "priority",
+      });
+      const payload = { model: model.id, messages: [], service_tier: "auto" };
+      expect(getFastModePayload(enabledConfig, model, payload)).toEqual({
+        ...payload,
+        service_tier: "priority",
+      });
+      expect(payload.service_tier).toBe("auto");
+      expect(getStatusText(enabledConfig, model)).toBe("fast");
+    });
+
+    it("does not change payloads or show fast when disabled", () => {
+      expect(getFastModePayload(defaults, model, {})).toBeUndefined();
+      expect(getStatusText(defaults, model)).toBeUndefined();
+    });
+  });
+
+  it("matches future GPT model IDs through the default prefix target", () => {
+    const model = { provider, id: "gpt-7-nova-preview" };
+    const defaults = cloneConfig();
+    const enabledConfig = { ...defaults, enabled: true };
+
     expect(findMatchingTarget(model, defaults.targets)).toEqual({
       provider,
-      model: "gpt-6-astra",
+      model: "gpt-*",
       serviceTier: "priority",
     });
-    const payload = { model: model.id, messages: [], service_tier: "auto" };
-    expect(getFastModePayload(enabledConfig, model, payload)).toEqual({
-      ...payload,
+    expect(getFastModePayload(enabledConfig, model, {})).toEqual({
       service_tier: "priority",
     });
-    expect(payload.service_tier).toBe("auto");
     expect(getStatusText(enabledConfig, model)).toBe("fast");
   });
 
-  it("does not change payloads or show fast when disabled", () => {
-    expect(getFastModePayload(defaults, model, {})).toBeUndefined();
-    expect(getStatusText(defaults, model)).toBeUndefined();
-  });
+  it("does not match non-GPT model IDs", () => {
+    const model = { provider, id: "claude" };
+    const defaults = cloneConfig();
+    const enabledConfig = { ...defaults, enabled: true };
 
-  it("does not match unconfigured model variants", () => {
-    const variant = { provider, id: "gpt-6-astra-preview" };
-    expect(findMatchingTarget(variant, defaults.targets)).toBeUndefined();
-    expect(getFastModePayload(enabledConfig, variant, {})).toBeUndefined();
-    expect(getStatusText(enabledConfig, variant)).toBeUndefined();
+    expect(findMatchingTarget(model, defaults.targets)).toBeUndefined();
+    expect(getFastModePayload(enabledConfig, model, {})).toBeUndefined();
+    expect(getStatusText(enabledConfig, model)).toBeUndefined();
   });
 });
 
