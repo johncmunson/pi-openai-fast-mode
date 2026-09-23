@@ -7,6 +7,7 @@ export type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
 
 export type FastTarget = {
   provider: string;
+  /** An exact model ID or a GPT version floor such as "gpt-5.4+". */
   model: string;
   serviceTier?: string;
 };

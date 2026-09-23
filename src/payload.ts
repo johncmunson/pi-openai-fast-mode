@@ -26,6 +26,31 @@ export function isSupportedProvider(provider: string): boolean {
   return SUPPORTED_PROVIDER_SET.has(provider);
 }
 
+type GptVersion = { major: number; minor: number };
+
+function parseGptVersion(modelId: string): GptVersion | undefined {
+  const match = /^gpt-(\d+)(?:\.(\d+))?(?=$|[.-])/i.exec(modelId);
+  if (!match) return undefined;
+
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2] ?? 0),
+  };
+}
+
+function matchesModelTarget(modelId: string, targetModel: string): boolean {
+  if (!targetModel.endsWith("+")) return targetModel === modelId;
+
+  const minimum = parseGptVersion(targetModel.slice(0, -1));
+  const actual = parseGptVersion(modelId);
+  if (!minimum || !actual) return false;
+
+  return (
+    actual.major > minimum.major ||
+    (actual.major === minimum.major && actual.minor >= minimum.minor)
+  );
+}
+
 export function findMatchingTarget(
   model: ModelRef | undefined,
   targets: FastTarget[],
@@ -35,7 +60,7 @@ export function findMatchingTarget(
   return targets.find(
     (target) =>
       target.provider === model.provider &&
-      target.model === model.id &&
+      matchesModelTarget(model.id, target.model) &&
       isSupportedProvider(target.provider),
   );
 }

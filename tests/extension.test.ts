@@ -188,49 +188,52 @@ describe("piFastModeExtension runtime behavior", () => {
     ).toEqual({ model: "gpt-5.4", service_tier: "priority" });
   });
 
-  it("--fast enables, persists, shows status, and mutates matching payloads", async () => {
-    const root = await makeTempDir();
-    const cwd = join(root, "project");
-    const agentDir = join(root, "agent");
-    await mkdir(cwd, { recursive: true });
+  it.each(["gpt-6-luna", "gpt-6-sol"])(
+    "--fast enables, persists, shows status, and mutates %s payloads",
+    async (modelId) => {
+      const root = await makeTempDir();
+      const cwd = join(root, "project");
+      const agentDir = join(root, "agent");
+      await mkdir(cwd, { recursive: true });
 
-    const { pi, handlers } = createFakePi(true);
-    createPiFastModeExtension({
-      extensionDir: join(root, "global", "pi-openai-fast-mode", "src"),
-      agentDir,
-    })(pi as any);
+      const { pi, handlers } = createFakePi(true);
+      createPiFastModeExtension({
+        extensionDir: join(root, "global", "pi-openai-fast-mode", "src"),
+        agentDir,
+      })(pi as any);
 
-    const ctx = makeCtx(cwd, { provider: "openai", id: "gpt-5.4" });
-    await runHandler(
-      handlers,
-      "session_start",
-      { type: "session_start", reason: "startup" },
-      ctx,
-    );
+      const ctx = makeCtx(cwd, { provider: "openai", id: modelId });
+      await runHandler(
+        handlers,
+        "session_start",
+        { type: "session_start", reason: "startup" },
+        ctx,
+      );
 
-    expectFastIndicatorShown(ctx);
-    expect(
-      JSON.parse(await readFile(getUserConfigPath(agentDir), "utf8")),
-    ).toMatchObject({
-      enabled: true,
-    });
+      expectFastIndicatorShown(ctx);
+      expect(
+        JSON.parse(await readFile(getUserConfigPath(agentDir), "utf8")),
+      ).toMatchObject({
+        enabled: true,
+      });
 
-    const mutated = await runHandler(
-      handlers,
-      "before_provider_request",
-      {
-        type: "before_provider_request",
-        payload: { model: "gpt-5.4", messages: [] },
-      },
-      ctx,
-    );
+      const mutated = await runHandler(
+        handlers,
+        "before_provider_request",
+        {
+          type: "before_provider_request",
+          payload: { model: modelId, messages: [] },
+        },
+        ctx,
+      );
 
-    expect(mutated).toEqual({
-      model: "gpt-5.4",
-      messages: [],
-      service_tier: "priority",
-    });
-  });
+      expect(mutated).toEqual({
+        model: modelId,
+        messages: [],
+        service_tier: "priority",
+      });
+    },
+  );
 
   it("/fast, /fast on, and /fast toggle persist expected enabled states", async () => {
     const root = await makeTempDir();

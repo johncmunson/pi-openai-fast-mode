@@ -81,7 +81,7 @@ describe.each(["openai", "openai-codex"])("GPT-6-Astra on %s", (provider) => {
   it("matches the default target, injects priority, and shows fast when enabled", () => {
     expect(findMatchingTarget(model, defaults.targets)).toEqual({
       provider,
-      model: "gpt-6-astra",
+      model: "gpt-5.4+",
       serviceTier: "priority",
     });
     const payload = { model: model.id, messages: [], service_tier: "auto" };
@@ -98,11 +98,35 @@ describe.each(["openai", "openai-codex"])("GPT-6-Astra on %s", (provider) => {
     expect(getStatusText(defaults, model)).toBeUndefined();
   });
 
-  it("does not match unconfigured model variants", () => {
+  it("matches model variants in the supported GPT family", () => {
     const variant = { provider, id: "gpt-6-astra-preview" };
-    expect(findMatchingTarget(variant, defaults.targets)).toBeUndefined();
-    expect(getFastModePayload(enabledConfig, variant, {})).toBeUndefined();
-    expect(getStatusText(enabledConfig, variant)).toBeUndefined();
+    expect(findMatchingTarget(variant, defaults.targets)).toEqual({
+      provider,
+      model: "gpt-5.4+",
+      serviceTier: "priority",
+    });
+    expect(getFastModePayload(enabledConfig, variant, {})).toEqual({
+      service_tier: "priority",
+    });
+    expect(getStatusText(enabledConfig, variant)).toBe("fast");
+  });
+
+  it.each(["gpt-6-luna", "gpt-6-sol", "gpt-7-luna-preview"])(
+    "supports %s by default",
+    (id) => {
+      const variant = { provider, id };
+      expect(getFastModePayload(enabledConfig, variant, { model: id })).toEqual({
+        model: id,
+        service_tier: "priority",
+      });
+      expect(getStatusText(enabledConfig, variant)).toBe("fast");
+    },
+  );
+
+  it("keeps earlier GPT models out of the default range", () => {
+    const earlierModel = { provider, id: "gpt-5.3" };
+    expect(findMatchingTarget(earlierModel, defaults.targets)).toBeUndefined();
+    expect(getStatusText(enabledConfig, earlierModel)).toBeUndefined();
   });
 });
 
