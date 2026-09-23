@@ -32,38 +32,14 @@ afterEach(async () => {
 });
 
 describe("DEFAULT_CONFIG", () => {
-  it("starts disabled with exact OpenAI and OpenAI-Codex GPT-5.4/GPT-5.5/GPT-5.6/GPT-6-Astra targets", () => {
+  it("starts disabled with OpenAI and OpenAI-Codex GPT 5.4+ targets", () => {
     expect(DEFAULT_CONFIG).toEqual({
       enabled: false,
       targets: [
-        { provider: "openai", model: "gpt-5.4", serviceTier: "priority" },
-        { provider: "openai", model: "gpt-5.5", serviceTier: "priority" },
-        { provider: "openai", model: "gpt-5.6", serviceTier: "priority" },
-        { provider: "openai", model: "gpt-5.6-sol", serviceTier: "priority" },
-        { provider: "openai", model: "gpt-5.6-terra", serviceTier: "priority" },
-        { provider: "openai", model: "gpt-5.6-luna", serviceTier: "priority" },
-        { provider: "openai", model: "gpt-6-astra", serviceTier: "priority" },
-        { provider: "openai-codex", model: "gpt-5.4", serviceTier: "priority" },
-        { provider: "openai-codex", model: "gpt-5.5", serviceTier: "priority" },
-        { provider: "openai-codex", model: "gpt-5.6", serviceTier: "priority" },
+        { provider: "openai", model: "gpt-5.4+", serviceTier: "priority" },
         {
           provider: "openai-codex",
-          model: "gpt-5.6-sol",
-          serviceTier: "priority",
-        },
-        {
-          provider: "openai-codex",
-          model: "gpt-5.6-terra",
-          serviceTier: "priority",
-        },
-        {
-          provider: "openai-codex",
-          model: "gpt-5.6-luna",
-          serviceTier: "priority",
-        },
-        {
-          provider: "openai-codex",
-          model: "gpt-6-astra",
+          model: "gpt-5.4+",
           serviceTier: "priority",
         },
       ],
@@ -76,7 +52,7 @@ describe("DEFAULT_CONFIG", () => {
     copy.targets[0]!.model = "changed";
 
     expect(DEFAULT_CONFIG.enabled).toBe(false);
-    expect(DEFAULT_CONFIG.targets[0]!.model).toBe("gpt-5.4");
+    expect(DEFAULT_CONFIG.targets[0]!.model).toBe("gpt-5.4+");
   });
 });
 
